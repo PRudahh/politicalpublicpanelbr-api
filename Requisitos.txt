@@ -1,0 +1,96 @@
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--Verificar possíveis APIs públicas que retornam dados dos:
+A)Prefeitos/Prefeituras: 
+--Dados pessoais (redes sociais, salário, sanções)
+--hierarquia de secretarias (que são os secretários - salário, contato)
+B)Vereadores:
+--Dados pessoais (redes sociais, salário, partido político)
+--Projetos públicos aprovados
+
+PROMPT: Olá! Gostaria de saber se existe alguma API pública oficial no Brasil que retorne dados sobre os órgãos municipais como quem é o prefeito e o 
+corpo de secretários que compõe a administração municipal, quem é o corpo de vereadores que compõe a câmara municipal, os principais projetos aprovados
+por esses vereadores (se existir algum), em quais obras é aplicada a verba pública (seja em novas obras de infraestrutura, seja em reformas de prédios
+públicos), e os dados pessoais de entes públicos como prefeitos e vereadores (dados de contato, afiliação política, salários, carga de trabalho, 
+número de acessores, anos de mandato).
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PROPOSTA DE APLICAÇÃO
+
+-Criar um portal que exiba as informações públicas mais relevantes de uma administração pública. Na prática, o site deverá ser dividido em 2 ÁREAS* 
+PRINCIPAIS:
+A)   
+
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PROMPT: Bem, eu tenho uma ideia de projetar uma aplicação (um site em formato público) que funcione como uma espécie de Painel Político Nacional do Brasil. 
+Esse painel político nada mais será do que um portal web que exiba para qualquer cidadão brasileiro informações sobre a Administração Pública (neste 
+primeiro momento, a ideia é exibir informações sobre a Entidade Municipal. Posteriormente, o painel conterá informações sobre a(s) entidade(s) Federal(is) 
+e Estadual(is)) em tempo real. Nesta proposta, o ideal seria que a aplicação fosse atualizada mês a mês, cobrindo os 48 meses de um mandato de Prefeito/Vereador.
+A ideia é apenas exibir em uma interface limpa, fluida, amigável e inteligente para o cidadão dados importantes relacionadas a Entidade Municipal, para construçao 
+de uma consciência pública do que é feito com o dinheiro e com os recursos coletados pelos municípios (que na prática, reflete o que é coletado por meio de 
+impostos ao contribuinte/cidadãos), tais como:
+
+-Estrutura Hierárquica do Município: 
+A)Prefeitura (Prefeito) e Secretarias (pessoas que são os secretários atuais): aqui seria exibido em formato de árvore ou outro design de fácil visualização 
+e exibição para o usuário, os dados de quem são as pessoas que ocupam esses cargos, além de dados relevantes para os cidadãos, como o emprego da verba pública 
+(obras, despesas por função, repasses de entes federais e/ou estaduais, entre outras informações gerais), projetos em execução, etc. Aqui também deve 
+ser exibido os dados públicos de contato de Prefeitos/Secretários, como salário, biografia/formação educacional (caso possível), contato, redes sociais, 
+afiliação política, despesas públicas.  
+B)Vereadores: aqui seria exibido todos os vereadores que compõem o corpo atual da câmara de vereadores, suas informações pessoais (redes sociais, 
+salário, biografia/formação educacional) e principalmente, projetos pessoais já aprovados ou em fase de votação na câmara. A ideia é mostrar propostas que o 
+vereador levou para a população como conquista do seu mandato. 
+
+O objetivo é cobrir o maior número de municípios neste site com o apoio de APIs públicas na qual seja possível a coleta desses dados, sempre tendo em mente
+que mapear Todos eles não será possível, mas que é a meta. O site provavelmente será hospedado em algum site de nuvem mais acessível, como a vercel, 
+netlify ou railway. A ideia é que a construção da api/backend seja feita em Laravel/PHP e a interface/frontend seja feita em ReactJS.
+Contudo, neste primeiro momento, o objetivo é apenas se concentrar na idealização da aplicação: criar os requisitos, entender o que será exibido (
+gostaria que você complementasse os dados/campos que eu já pensei), identificar pontos que sejam interessantes para serem monitorados/indicados
+para os cidadãos e criar um diagrama que possa ajudar com a compreensão e visualização do projeto em primeiro lugar. Você conseguiria me ajudar com isso ?    
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+PROMPT: Adorei o esquema gerado e todos os pontos que você abordou! Mas antes de prosseguir, lembre também de considerar que futuramente, no mesmo site, 
+será preciso "separar" uma área do site para contemplar entes estaduais e federais, nos mesmos moldes do que estamos fazendo nessa primeira etapa. Considere
+também que apesar dessa primeira etapa ser relativamente "simples" de ser imaginada, na prática o projeto tem uma "pegada" MobileFirst:
+o ideal é que o cidadão tenha acesso ao site via internet móvel, e possa consulta-las em primeira mão via smartphone, priorizando a mobilidade dele. 
+Claro que a aplicação deve funcionar bem e a interface deva ser fluida em qualquer dispositivo, mas na prática, como o foco é no cidadão, o frontEnd vai ter
+de ser uma prioridade maior, ou seja, precisamos tomar muito cuidado e ter zelo para que a aplicação tenha um design 100% fácil de ser usado, interpretado e 
+navegável para o usuário final. Além disso é preciso ter cuidado especial com o projeto, pois quero construir uma documentação sólida do que se trata o site, 
+mapeando de onde virá todas as informações para que o próprio cidadão tenha ciência da origem dos dados que serão exibidas e que ele tenha consciência de que
+alguns municípios não terão as informações pelos mesmos motivos que você me indicou. Sendo assim, podemos daqui a pouco partir para começar a construir o 
+backend/api da aplicação. Gostei principalmente das seguintes sugestões:
+-Ranking de Transparência
+-Linha do Tempo do mandato
+-Modo Jornalista
+Acredito que estamos prontos para iniciar o desenvolvimento do backend/api. Você teria como gerar o projeto, e incluir nele uma collection de endpoints 
+que possam ser testados via Postman ? (Seria legal documentar as definições do MVP do Projeto em um READ.me) 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
