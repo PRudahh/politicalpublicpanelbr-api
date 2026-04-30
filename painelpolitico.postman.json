@@ -1,0 +1,936 @@
+{
+  "info": {
+    "_postman_id": "painel-politico-nacional-v1",
+    "name": "Painel Político Nacional — API v1",
+    "description": "Collection completa para testar todos os endpoints da API do Painel Político Nacional.\n\n## Como usar\n1. Importe este arquivo no Postman (File → Import)\n2. Configure a variável `base_url` para `http://localhost:8000/api/v1`\n3. Para endpoints do Modo Jornalista, execute primeiro **Login Jornalista** e o token será salvo automaticamente na variável `journalist_token`\n\n## Variáveis de ambiente\n- `base_url` — URL base da API\n- `ibge_code` — Código IBGE do município de teste (padrão: 2408102 = Natal/RN)\n- `journalist_token` — Token Bearer (preenchido automaticamente após login)\n- `year` — Ano para filtros (padrão: 2025)\n- `month` — Mês para filtros (padrão: 4)\n\n## Fonte dos dados\nTodos os dados são coletados de APIs governamentais públicas (TSE, SICONFI, Portal da Transparência, IBGE). Consulte o README para detalhes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",          "value": "http://localhost:8000/api/v1", "type": "string" },
+    { "key": "ibge_code",         "value": "2408102",  "type": "string", "description": "Natal/RN" },
+    { "key": "ibge_code_sp",      "value": "3550308",  "type": "string", "description": "São Paulo/SP" },
+    { "key": "ibge_code_recife",  "value": "2611606",  "type": "string", "description": "Recife/PE" },
+    { "key": "journalist_token",  "value": "",          "type": "string" },
+    { "key": "year",              "value": "2025",      "type": "string" },
+    { "key": "month",             "value": "4",         "type": "string" },
+    { "key": "legislator_id",     "value": "1",         "type": "string" },
+    { "key": "work_id",           "value": "1",         "type": "string" }
+  ],
+  "item": [
+
+    {
+      "name": "🔍 Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica se a API está no ar. Retorna status, versão e timestamp."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\",\n  \"version\": \"1.0.0\",\n  \"timestamp\": \"2025-04-28T10:00:00-03:00\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "🔐 Autenticação (Modo Jornalista)",
+      "item": [
+        {
+          "name": "Registrar Jornalista",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Repórter\",\n  \"email\": \"maria@jornaldoestado.com.br\",\n  \"password\": \"senha123456\",\n  \"password_confirmation\": \"senha123456\",\n  \"organization\": \"Jornal do Estado\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/journalist/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "journalist", "register"]
+            },
+            "description": "Solicita acesso ao Modo Jornalista. A conta precisa ser aprovada manualmente por um admin antes de fazer login."
+          }
+        },
+        {
+          "name": "Login Jornalista",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.token) {",
+                  "  pm.collectionVariables.set('journalist_token', res.token);",
+                  "  console.log('✅ Token salvo:', res.token.substring(0, 20) + '...');",
+                  "} else {",
+                  "  console.warn('⚠️ Token não encontrado na resposta');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@jornaldoestado.com.br\",\n  \"password\": \"senha123456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/journalist/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "journalist", "login"]
+            },
+            "description": "Faz login e obtém o Bearer Token. O token é salvo automaticamente na variável `journalist_token` via script de teste."
+          }
+        },
+        {
+          "name": "Logout Jornalista",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/journalist/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "journalist", "logout"]
+            },
+            "description": "Revoga o token atual. Requer Bearer Token."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏙️ Municípios",
+      "item": [
+        {
+          "name": "Listar municípios (paginado)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities?per_page=20&sort_by=name",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities"],
+              "query": [
+                { "key": "per_page", "value": "20" },
+                { "key": "sort_by",  "value": "name" },
+                { "key": "uf",       "value": "",    "disabled": true },
+                { "key": "region",   "value": "",    "disabled": true },
+                { "key": "has_open_data", "value": "true", "disabled": true }
+              ]
+            },
+            "description": "Lista todos os municípios de forma paginada.\n\n**Query params opcionais:**\n- `uf` — filtrar por estado (ex: RN, SP, PE)\n- `region` — filtrar por região (Norte, Nordeste, Sudeste, Sul, Centro-Oeste)\n- `has_open_data` — true/false\n- `sort_by` — name | population | transparency_score\n- `per_page` — itens por página (padrão: 50)"
+          }
+        },
+        {
+          "name": "Listar municípios — filtrar por UF (RN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities?uf=RN&sort_by=transparency_score&per_page=10",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities"],
+              "query": [
+                { "key": "uf",       "value": "RN" },
+                { "key": "sort_by",  "value": "transparency_score" },
+                { "key": "per_page", "value": "10" }
+              ]
+            },
+            "description": "Lista municípios do Rio Grande do Norte, ordenados por score de transparência."
+          }
+        },
+        {
+          "name": "Buscar município por nome",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/search?q=natal",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "search"],
+              "query": [{ "key": "q", "value": "natal" }]
+            },
+            "description": "Busca municípios por nome (mínimo 2 caracteres). Retorna até 20 resultados. Use para o campo de busca do app mobile."
+          }
+        },
+        {
+          "name": "Dados de um município (Natal/RN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}"]
+            },
+            "description": "Retorna dados completos de um município pelo código IBGE.\n\nCódigos de exemplo:\n- `2408102` — Natal/RN\n- `3550308` — São Paulo/SP\n- `2611606` — Recife/PE\n- `1302603` — Manaus/AM\n- `5300108` — Brasília/DF"
+          }
+        },
+        {
+          "name": "Resumo executivo do município (mobile)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/summary",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "summary"]
+            },
+            "description": "Painel rápido otimizado para o topo do app mobile. Retorna: prefeito atual, score de transparência, mandato vigente, IDH, população e orçamento anual."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏛️ Executivo Municipal",
+      "item": [
+        {
+          "name": "Prefeito + todas as secretarias",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/executive",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "executive"]
+            },
+            "description": "Retorna a estrutura hierárquica completa do executivo municipal: prefeito + todos os secretários ativos. Ideal para renderizar a árvore organizacional no frontend."
+          }
+        },
+        {
+          "name": "Dados do prefeito",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/executive/mayor",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "executive", "mayor"]
+            },
+            "description": "Retorna perfil completo do prefeito: nome, foto, partido, votos recebidos (TSE), salário, número de assessores, redes sociais, biografia e mandato vigente."
+          }
+        },
+        {
+          "name": "Lista de secretários",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/executive/secretaries",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "executive", "secretaries"]
+            },
+            "description": "Lista todos os secretários municipais em exercício com: nome, pasta, data de posse, vínculo empregatício e salário.\n\n⚠️ Disponível apenas para municípios com portal de transparência ativo (LAI)."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🗳️ Câmara de Vereadores",
+      "item": [
+        {
+          "name": "Listar todos os vereadores",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature"],
+              "query": [
+                { "key": "sort_by", "value": "votes", "disabled": true, "description": "votes | bills_approved | attendance" },
+                { "key": "party",   "value": "PT",    "disabled": true, "description": "Filtrar por sigla do partido" }
+              ]
+            },
+            "description": "Lista todos os vereadores do mandato vigente.\n\n**Query params opcionais:**\n- `sort_by` — votes (votos recebidos) | bills_approved | attendance\n- `party` — filtrar por sigla (ex: PT, PL, MDB)\n\nRetorna: nome, foto, partido, votos, salário, presença, projetos aprovados, índice de produtividade."
+          }
+        },
+        {
+          "name": "Listar vereadores — ordenar por projetos aprovados",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature?sort_by=bills_approved",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature"],
+              "query": [{ "key": "sort_by", "value": "bills_approved" }]
+            }
+          }
+        },
+        {
+          "name": "Listar vereadores — filtrar por partido",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature?party=PT",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature"],
+              "query": [{ "key": "party", "value": "PT" }]
+            }
+          }
+        },
+        {
+          "name": "Perfil de um vereador",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature/{{legislator_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature", "{{legislator_id}}"]
+            },
+            "description": "Perfil completo de um vereador com seus últimos 10 projetos de lei."
+          }
+        },
+        {
+          "name": "Projetos de lei de um vereador",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature/{{legislator_id}}/bills",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature", "{{legislator_id}}", "bills"],
+              "query": [
+                { "key": "status", "value": "aprovado", "disabled": true, "description": "em_tramitacao | aprovado | rejeitado | arquivado | vetado" }
+              ]
+            },
+            "description": "Lista paginada dos projetos de lei de um vereador específico.\n\n**Query params:**\n- `status` — em_tramitacao | aprovado | rejeitado | arquivado | vetado"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📜 Projetos de Lei",
+      "item": [
+        {
+          "name": "Todos os projetos da câmara",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/bills",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "bills"],
+              "query": [
+                { "key": "status",       "value": "",     "disabled": true },
+                { "key": "category",     "value": "",     "disabled": true },
+                { "key": "year",         "value": "",     "disabled": true },
+                { "key": "legislator_id","value": "",     "disabled": true }
+              ]
+            },
+            "description": "Lista paginada de todos os projetos de lei da câmara municipal.\n\n**Query params opcionais:**\n- `status` — em_tramitacao | aprovado | rejeitado | arquivado | vetado\n- `category` — saúde | educação | infraestrutura | social | admin | outros\n- `year` — filtrar por ano de apresentação\n- `legislator_id` — filtrar por vereador\n\n⚠️ Disponível apenas para câmaras que publicam dados abertos."
+          }
+        },
+        {
+          "name": "Projetos aprovados em 2025",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/bills?status=aprovado&year={{year}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "bills"],
+              "query": [
+                { "key": "status", "value": "aprovado" },
+                { "key": "year",   "value": "{{year}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Projetos em tramitação — categoria saúde",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/bills?status=em_tramitacao&category=saúde",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "bills"],
+              "query": [
+                { "key": "status",   "value": "em_tramitacao" },
+                { "key": "category", "value": "saúde" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏗️ Obras Públicas",
+      "item": [
+        {
+          "name": "Listar todas as obras",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/public-works",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "public-works"],
+              "query": [
+                { "key": "status",         "value": "", "disabled": true },
+                { "key": "category",       "value": "", "disabled": true },
+                { "key": "funding_source", "value": "", "disabled": true }
+              ]
+            },
+            "description": "Lista paginada de obras públicas municipais.\n\n**Query params opcionais:**\n- `status` — planejada | em_execucao | concluida | paralisada | atrasada | cancelada\n- `category` — pavimentacao | saneamento | saude | educacao | lazer | outros\n- `funding_source` — municipal | estadual | federal | misto"
+          }
+        },
+        {
+          "name": "Obras em execução",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/public-works?status=em_execucao",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "public-works"],
+              "query": [{ "key": "status", "value": "em_execucao" }]
+            }
+          }
+        },
+        {
+          "name": "Obras atrasadas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/public-works?status=atrasada",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "public-works"],
+              "query": [{ "key": "status", "value": "atrasada" }]
+            }
+          }
+        },
+        {
+          "name": "Obras com recursos federais",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/public-works?funding_source=federal",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "public-works"],
+              "query": [{ "key": "funding_source", "value": "federal" }]
+            }
+          }
+        },
+        {
+          "name": "Detalhes de uma obra",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/public-works/{{work_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "public-works", "{{work_id}}"]
+            },
+            "description": "Detalhes completos de uma obra: valor contratado, valor executado, empresa contratada (CNPJ), contrato, licitação, geolocalização e status."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💰 Finanças Municipais",
+      "item": [
+        {
+          "name": "Visão geral financeira (mês atual)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/finances",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "finances"],
+              "query": [
+                { "key": "year",  "value": "{{year}}", "disabled": true },
+                { "key": "month", "value": "{{month}}","disabled": true }
+              ]
+            },
+            "description": "Retorna o resumo financeiro do mês: receita total, despesa total, saldo e percentual de execução orçamentária.\n\nFonte: SICONFI — Tesouro Nacional"
+          }
+        },
+        {
+          "name": "Visão geral financeira — mês específico",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/finances?year={{year}}&month={{month}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "finances"],
+              "query": [
+                { "key": "year",  "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Receitas detalhadas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/finances/revenues?year={{year}}&month={{month}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "finances", "revenues"],
+              "query": [
+                { "key": "year",  "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" }
+              ]
+            },
+            "description": "Receitas por categoria: IPTU, ISS, ITBI, FPM, FUNDEB, ICMS-cota, SUS, entre outras.\n\nFonte: SICONFI"
+          }
+        },
+        {
+          "name": "Despesas por função",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/finances/expenditures?year={{year}}&month={{month}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "finances", "expenditures"],
+              "query": [
+                { "key": "year",  "value": "{{year}}" },
+                { "key": "month", "value": "{{month}}" }
+              ]
+            },
+            "description": "Despesas por função: saúde, educação, assistência social, infraestrutura, administração, legislativo.\n\nRetorna valores empenhado, liquidado e pago.\n\nFonte: SICONFI"
+          }
+        },
+        {
+          "name": "Relatório de Gestão Fiscal (RGF)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/finances/fiscal-report",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "finances", "fiscal-report"]
+            },
+            "description": "Relatório de Gestão Fiscal (RGF) mais recente: dívida consolidada, restos a pagar, limites da LRF.\n\nFonte: SICONFI — Tesouro Nacional"
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔄 Repasses Federais e Estaduais",
+      "item": [
+        {
+          "name": "Todos os repasses",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/transfers",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "transfers"],
+              "query": [
+                { "key": "source", "value": "",     "disabled": true, "description": "federal | estadual" },
+                { "key": "year",   "value": "",     "disabled": true },
+                { "key": "month",  "value": "",     "disabled": true },
+                { "key": "type",   "value": "",     "disabled": true, "description": "FPM | FUNDEB | SUS | ICMS | convenio | emenda" }
+              ]
+            },
+            "description": "Lista paginada de repasses federais e estaduais recebidos.\n\n**Query params:**\n- `source` — federal | estadual\n- `type` — FPM | FUNDEB | SUS | ICMS | convenio | emenda | outros\n- `year` / `month` — período\n\nFonte: Portal da Transparência Federal"
+          }
+        },
+        {
+          "name": "Repasses federais",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/transfers?source=federal&year={{year}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "transfers"],
+              "query": [
+                { "key": "source", "value": "federal" },
+                { "key": "year",   "value": "{{year}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Repasses estaduais",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/transfers?source=estadual&year={{year}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "transfers"],
+              "query": [
+                { "key": "source", "value": "estadual" },
+                { "key": "year",   "value": "{{year}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Repasses do tipo FUNDEB",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/transfers?type=FUNDEB&year={{year}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "transfers"],
+              "query": [
+                { "key": "type", "value": "FUNDEB" },
+                { "key": "year", "value": "{{year}}" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📅 Linha do Tempo do Mandato",
+      "item": [
+        {
+          "name": "Timeline completa do mandato (48 meses)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/timeline",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "timeline"]
+            },
+            "description": "Retorna todos os snapshots mensais do mandato vigente (até 48 meses).\n\nCada snapshot contém: receitas, despesas, repasses, obras em execução/concluídas/atrasadas, projetos aprovados e destaques do mês."
+          }
+        },
+        {
+          "name": "Snapshot de um mês específico",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/timeline/{{year}}/{{month}}",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "timeline", "{{year}}", "{{month}}"]
+            },
+            "description": "Snapshot consolidado de um mês específico do mandato.\n\nRetorna: mês do mandato (1-48), receita, despesa, obras, projetos e destaques."
+          }
+        },
+        {
+          "name": "Snapshot — janeiro 2025 (1º mês do mandato)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/timeline/2025/1",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "timeline", "2025", "1"]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏆 Rankings",
+      "item": [
+        {
+          "name": "Ranking nacional de transparência",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/rankings/transparency?per_page=50",
+              "host": ["{{base_url}}"],
+              "path": ["rankings", "transparency"],
+              "query": [
+                { "key": "per_page", "value": "50" },
+                { "key": "uf",       "value": "",   "disabled": true }
+              ]
+            },
+            "description": "Ranking nacional de transparência pública municipal.\n\nScore calculado a partir de: dados eleitorais completos (TSE), finanças mensais (SICONFI), obras cadastradas, projetos de lei disponíveis, secretários cadastrados e portal LAI ativo.\n\n**Query params:**\n- `uf` — filtrar por estado\n- `per_page` — itens por página"
+          }
+        },
+        {
+          "name": "Ranking de transparência — por estado (RN)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/rankings/transparency?uf=RN",
+              "host": ["{{base_url}}"],
+              "path": ["rankings", "transparency"],
+              "query": [{ "key": "uf", "value": "RN" }]
+            }
+          }
+        },
+        {
+          "name": "Ranking de execução orçamentária",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/rankings/budget-execution",
+              "host": ["{{base_url}}"],
+              "path": ["rankings", "budget-execution"]
+            },
+            "description": "Ranking de municípios por percentual de execução orçamentária no mês corrente."
+          }
+        },
+        {
+          "name": "Ranking de obras públicas",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/rankings/public-works",
+              "host": ["{{base_url}}"],
+              "path": ["rankings", "public-works"]
+            },
+            "description": "Ranking de municípios por volume e execução de obras públicas."
+          }
+        },
+        {
+          "name": "Ranking legislativo",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/rankings/legislative",
+              "host": ["{{base_url}}"],
+              "path": ["rankings", "legislative"]
+            },
+            "description": "Ranking de municípios por produtividade legislativa (projetos aprovados por câmara)."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📤 Exportação — Modo Jornalista (🔒 Bearer Token)",
+      "item": [
+        {
+          "name": "Exportar tudo (JSON)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/full?format=json",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "full"],
+              "query": [{ "key": "format", "value": "json" }]
+            },
+            "description": "Exporta todos os dados do município em JSON (prefeito, secretários, vereadores, projetos, obras).\n\n🔒 Requer Bearer Token (Modo Jornalista)."
+          }
+        },
+        {
+          "name": "Exportar tudo (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "text/csv" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/full?format=csv",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "full"],
+              "query": [{ "key": "format", "value": "csv" }]
+            },
+            "description": "Download do CSV completo com todos os dados do município.\n\n🔒 Requer Bearer Token (Modo Jornalista)."
+          }
+        },
+        {
+          "name": "Exportar vereadores (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "text/csv" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/legislators?format=csv",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "legislators"],
+              "query": [{ "key": "format", "value": "csv" }]
+            }
+          }
+        },
+        {
+          "name": "Exportar finanças (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "text/csv" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/finances?format=csv&year={{year}}",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "finances"],
+              "query": [
+                { "key": "format", "value": "csv" },
+                { "key": "year",   "value": "{{year}}" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Exportar obras (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "text/csv" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/public-works?format=csv",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "public-works"],
+              "query": [{ "key": "format", "value": "csv" }]
+            }
+          }
+        },
+        {
+          "name": "Comparar municípios (Natal vs São Paulo vs Recife)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept",        "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{journalist_token}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/export/compare?codes={{ibge_code}},{{ibge_code_sp}},{{ibge_code_recife}}&module=summary",
+              "host": ["{{base_url}}"],
+              "path": ["export", "compare"],
+              "query": [
+                { "key": "codes",  "value": "{{ibge_code}},{{ibge_code_sp}},{{ibge_code_recife}}" },
+                { "key": "module", "value": "summary", "description": "summary | finances | legislature | public-works" }
+              ]
+            },
+            "description": "Compara dois ou mais municípios lado a lado.\n\n**Query params:**\n- `codes` — lista de códigos IBGE separados por vírgula (máx. 5)\n- `module` — summary | finances | legislature | public-works\n\n🔒 Requer Bearer Token (Modo Jornalista)."
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "⚡ Testes de Erros e Validação",
+      "item": [
+        {
+          "name": "404 — Município inexistente",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/9999999",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "9999999"]
+            },
+            "description": "Deve retornar 404 Not Found."
+          }
+        },
+        {
+          "name": "422 — Busca com termo muito curto",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/search?q=a",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "search"],
+              "query": [{ "key": "q", "value": "a" }]
+            },
+            "description": "Deve retornar 422 Unprocessable Entity (mínimo 2 caracteres)."
+          }
+        },
+        {
+          "name": "401 — Exportação sem token",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/export/{{ibge_code}}/full",
+              "host": ["{{base_url}}"],
+              "path": ["export", "{{ibge_code}}", "full"]
+            },
+            "description": "Deve retornar 401 Unauthorized (endpoint protegido por Sanctum)."
+          }
+        },
+        {
+          "name": "401 — Login com credenciais inválidas",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept",       "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"naoexiste@teste.com\",\n  \"password\": \"senhaerrada\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/journalist/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "journalist", "login"]
+            },
+            "description": "Deve retornar 401 Unauthorized."
+          }
+        },
+        {
+          "name": "404 — Vereador inexistente",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/municipalities/{{ibge_code}}/legislature/99999",
+              "host": ["{{base_url}}"],
+              "path": ["municipalities", "{{ibge_code}}", "legislature", "99999"]
+            },
+            "description": "Deve retornar 404 Not Found."
+          }
+        }
+      ]
+    }
+
+  ]
+}
