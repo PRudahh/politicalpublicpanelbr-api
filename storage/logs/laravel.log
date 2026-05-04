@@ -1,0 +1,24 @@
+[2026-05-04 14:32:02] laravel.EMERGENCY: Unable to create configured logger. Using emergency logger. {"exception":"[object] (InvalidArgumentException(code: 0): Log [] is not defined. at C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Log/LogManager.php:212)
+[stacktrace]
+#0 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(137): Illuminate/Log/LogManager->resolve()
+#1 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(124): Illuminate/Log/LogManager->get()
+#2 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Log/LogManager.php(681): Illuminate/Log/LogManager->driver()
+#3 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(317): Illuminate/Log/LogManager->error()
+#4 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Exceptions/Handler.php(278): Illuminate/Foundation/Exceptions/Handler->reportThrowable()
+#5 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(523): Illuminate/Foundation/Exceptions/Handler->report()
+#6 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(203): Illuminate/Foundation/Console/Kernel->reportException()
+#7 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/artisan(34): Illuminate/Foundation/Console/Kernel->handle()
+#8 {main}
+"} 
+[2026-05-04 14:32:02] laravel.ERROR: Class "App\Providers\AppServiceProvider" not found {"exception":"[object] (Error(code: 0): Class \"App\\Providers\\AppServiceProvider\" not found at C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/ProviderRepository.php:206)
+[stacktrace]
+#0 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/ProviderRepository.php(142): Illuminate/Foundation/ProviderRepository->createProvider()
+#1 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/ProviderRepository.php(61): Illuminate/Foundation/ProviderRepository->compileManifest()
+#2 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(794): Illuminate/Foundation/ProviderRepository->load()
+#3 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Bootstrap/RegisterProviders.php(17): Illuminate/Foundation/Application->registerConfiguredProviders()
+#4 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Application.php(286): Illuminate/Foundation/Bootstrap/RegisterProviders->bootstrap()
+#5 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(447): Illuminate/Foundation/Application->bootstrapWith()
+#6 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(199): Illuminate/Foundation/Console/Kernel->bootstrap()
+#7 C:/Users/Edjane Pinheiro/Downloads/Rudah/Estudo/Trampo-Programação/Projeto-politicalpublicpanelbr/artisan(34): Illuminate/Foundation/Console/Kernel->handle()
+#8 {main}
+"} 
